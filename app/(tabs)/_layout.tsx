@@ -1,21 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import React from 'react';
-import { View } from 'react-native';
+import { View, Pressable, Text } from 'react-native';
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#16A34A', // emerald green
-        tabBarInactiveTintColor: '#6B7280', // cool gray
         tabBarStyle: {
-          backgroundColor: '#F9FAFB', // near-white background
-          borderTopColor: '#E5E7EB',  // light gray border
+          backgroundColor: '#F9FAFB',
+          borderTopColor: '#E5E7EB',
           height: 70,
         },
-        tabBarIcon: ({ color, size, focused }: { color: string; size: number; focused: boolean }) => {
+        tabBarIcon: ({ color, size, focused }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'ellipse-outline';
 
           switch (route.name) {
@@ -25,47 +23,76 @@ export default function TabsLayout() {
             case 'diseaseDetection':
               iconName = focused ? 'medkit' : 'medkit-outline';
               break;
-            case 'assistant':
-              iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-              break;
             case 'marketPrices':
               iconName = focused ? 'pricetag' : 'pricetag-outline';
               break;
             case 'profile':
               iconName = focused ? 'person' : 'person-outline';
               break;
-            default:
-              iconName = 'ellipse-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return (
+            <Ionicons
+              name={iconName}
+              size={size}
+              color={focused ? '#525652ff' : '#6B7280'} // green when active, gray when inactive
+              style={{ opacity: focused ? 1 : 0.5 }} // inactive = opaque
+            />
+          );
+        },
+        tabBarLabel: ({ focused, color }) => {
+          // Assistant has no label
+          if (route.name === 'assistant') return null;
+
+          return (
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: focused ? 'bold' : 'normal',
+                color: focused ? '#525652ff' : '#6B7280',
+                opacity: focused ? 1 : 0.5,
+              }}
+            >
+              {route.name === 'dashboard'
+                ? 'Dashboard'
+                : route.name === 'diseaseDetection'
+                ? 'Disease'
+                : route.name === 'marketPrices'
+                ? 'Prices'
+                : route.name === 'profile'
+                ? 'Profile'
+                : ''}
+            </Text>
+          );
         },
       })}
     >
       <Tabs.Screen name="dashboard" options={{ title: 'Dashboard' }} />
       <Tabs.Screen name="diseaseDetection" options={{ title: 'Disease' }} />
-      <Tabs.Screen 
-        name="assistant" 
+
+      {/* Custom middle tab */}
+      <Tabs.Screen
+        name="assistant"
         options={{
-          title: 'Assistant',
-          tabBarIcon: ({ focused }) => (
-            <View className="justify-center items-center -mt-3">
-              <View className={`
-                w-20 h-20 rounded-full justify-center items-center
-                shadow-lg shadow-black
-                ${focused ? 'bg-emerald-600' : 'bg-emerald-600'}
-              `}>
-                <Ionicons 
-                  name={focused ? 'chatbubbles' : 'chatbubbles-outline'} 
-                  size={36} 
-                  color="white" 
-                />
+          tabBarButton: () => (
+            <Pressable
+              onPress={() => router.push('/assistantScreen')}
+              style={{ justifyContent: 'center', alignItems: 'center' }}
+            >
+              <View
+                className="
+                  w-20 h-20 rounded-full justify-center items-center
+                  shadow-lg shadow-black -mt-6
+                  bg-emerald-600
+                "
+              >
+                <Ionicons name="chatbubbles" size={36} color="white" />
               </View>
-            </View>
+            </Pressable>
           ),
-          tabBarLabel: () => null, // Hide the label
-        }} 
+        }}
       />
+
       <Tabs.Screen name="marketPrices" options={{ title: 'Prices' }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
     </Tabs>

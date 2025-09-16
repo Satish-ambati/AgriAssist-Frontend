@@ -5,7 +5,7 @@ import { Stack, Tabs } from "expo-router";
 
 export default function AssistantLayout() {
   return (
-  <Stack>
+  <Stack screenOptions={{ headerShown: false }}>
     <Stack.Screen name="crop-monitoring" options={{ headerShown: false }} />
     <Stack.Screen name="crop-selection" options={{ headerShown: false }} /> 
     <Stack.Screen name="fertilizer-schedule" options={{ headerShown: false }} />

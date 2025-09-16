@@ -4,7 +4,7 @@ import React from 'react'
 const cropMonitoring = () => {
   return (
     <View>
-      <Text>crop-monitoring</Text>
+      <Text >crop-monitoring</Text>
     </View>
   )
 }
