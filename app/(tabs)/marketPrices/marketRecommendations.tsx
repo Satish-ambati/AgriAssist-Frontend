@@ -132,7 +132,7 @@
 // }
 // PricesScreen.tsx
 import React, { useState } from "react";
-import { FlatList, Text, TextInput, View } from "react-native";
+import { FlatList, StatusBar, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const villageData = [
@@ -189,6 +189,7 @@ export default function PricesScreen() {
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* Header */}
       <View className="bg-white px-6 py-6 border-b border-gray-100 shadow-sm">
+        <StatusBar barStyle="dark-content" />
         <Text className="text-3xl font-bold text-emerald-700 mb-1">
            Market Prices
         </Text>
@@ -228,7 +229,7 @@ export default function PricesScreen() {
                       📍 {item.distance} km away
                     </Text>
                   </View>
-                  <View className="bg-emerald-500 rounded-full px-3 py-2">
+                  <View className="rounded-full px-3 py-2 border border-white/30" style={{backgroundColor:"rgba(255,255,255,0.2)"}}>
                     <Text className="text-white text-sm font-semibold">
                       {item.crops.length} crops
                     </Text>
