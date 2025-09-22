@@ -40,7 +40,9 @@
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.5.1",
     "tailwindcss": "^3.4.17",
-    "vector-icons": "^0.1.0"
+    "vector-icons": "^0.1.0",
+    "expo-image-picker": "~17.0.8",
+    "expo-linear-gradient": "~15.0.7"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
