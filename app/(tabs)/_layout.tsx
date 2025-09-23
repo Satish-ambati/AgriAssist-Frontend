@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { Tabs, router } from 'expo-router';
 import React from 'react';
 import { View, Pressable, Text } from 'react-native';
@@ -86,7 +86,7 @@ export default function TabsLayout() {
                   bg-emerald-600
                 "
               >
-                <Ionicons name="chatbubbles" size={36} color="white" />
+                <FontAwesome5 name="robot" size={28} color="white" />
               </View>
             </Pressable>
           ),

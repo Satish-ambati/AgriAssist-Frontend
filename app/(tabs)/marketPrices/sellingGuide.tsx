@@ -3,12 +3,13 @@ import React from 'react'
 
 const sellingGuide = () => {
   return (
-    <View>
-      <Text>sellingGuide</Text>
-    </View>
+    <View className="flex-1 justify-center items-center bg-white">
+          <Text className="text-green-600 font-bold text-2xl">
+            Selling guide
+          </Text>
+        </View>
   )
 }
 
 export default sellingGuide
 
-const styles = StyleSheet.create({})
