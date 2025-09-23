@@ -1,8 +1,9 @@
 {
   "expo": {
     "name": "AgriAssist-frontend",
-    "slug": "AgriAssist-frontend",
+    "slug": "agriassist",
     "version": "1.0.0",
+    "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "agriassistfrontend",
@@ -13,16 +14,16 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.ashokdev.agriassist"
     },
     "web": {
-      "bundler" : "metro" ,
+      "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
@@ -41,9 +42,12 @@
         }
       ]
     ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    }
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "35d083db-17c3-407e-8847-9bdc8434f0d8"
+      }
+    },
+    "owner": "ashok-dev"
   }
 }
