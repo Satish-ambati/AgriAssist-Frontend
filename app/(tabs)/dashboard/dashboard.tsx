@@ -3,94 +3,135 @@ import {
   Text,
   View,
   ScrollView,
-  TouchableOpacity,
   RefreshControl,
   Alert,
   Dimensions,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Geolocation from 'react-native-geolocation-service';
+import Weather, { WeatherData } from './weather';
+import FarmerCurrentCrops, { Crop } from './farmerCurrentCrops';
+import QuickAccess from './quickAccess';
 
 const { width } = Dimensions.get('window');
 
 const Dashboard = () => {
   const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = useState(false);
-  
-  type WeatherForecast = {
-    day: string;
-    temp: string;
-    condition: string;
-  };
-  
-  type WeatherData = {
-    temperature: number;
-    humidity: number;
-    condition: string;
-    windSpeed: number;
-    rainfall: number;
-    forecast: WeatherForecast[];
-  };
-  
+  const [currentLocation, setCurrentLocation] = useState<string>('Loading location...');
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  
-  type Crop = {
-    _id: string;
-    crop: {
-      name: string;
-      variety: string;
-      category: string;
-    };
-    plantingArea: { value: number; unit: string };
-    cropStage: string;
-    timeline: {
-      sowingDate: string;
-      expectedHarvestDate: string;
-    };
-    expenses: { total: number };
-    yield: { expected: number };
-    healthStatus: string;
-    nextTask: string;
-    taskDate: string;
-  };
-
   const [currentCrops, setCurrentCrops] = useState<Crop[]>([]);
   const [loading, setLoading] = useState(true);
-
+  
   // Weather API Configuration
-  // To get a weather API key:
-  // 1. Sign up at https://openweathermap.org/api
-  // 2. Choose a plan (free tier available)
-  // 3. Get your API key from dashboard
-  // 4. Replace 'YOUR_API_KEY' with your actual key
   const WEATHER_API_KEY = '39a9673a646fefb7c99faca3bf0da4a8';
   const WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather';
+  const GEOCODING_API_URL = 'https://api.openweathermap.org/geo/1.0/reverse';
 
+  const scrollViewRef = useRef<ScrollView>(null);
+  
   useEffect(() => {
-    fetchDashboardData();
+    requestLocationPermission();
   }, []);
 
-  const fetchWeatherData = async () => {
-    try {     
-      // Sample data for demo
-      const weatherResponse = {
-        temperature: 28,
-        humidity: 65,
-        condition: 'Partly Cloudy',
-        windSpeed: 12,
-        rainfall: 0,
-        forecast: [
-          { day: 'Today', temp: '28°C', condition: 'Partly Cloudy' },
-          { day: 'Tomorrow', temp: '30°C', condition: 'Sunny' },
-          { day: 'Day 3', temp: '26°C', condition: 'Rainy' },
-        ]
-      };
+  const scrollToTop = () => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  };
 
-      setWeatherData(weatherResponse);
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Permission',
+            message: 'AgriAssist needs access to your location to show weather data',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          }
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          getCurrentLocation();
+        } else {
+          setCurrentLocation('Location permission denied');
+          fetchDashboardData(); // Load data without location
+        }
+      } catch (err) {
+        console.warn(err);
+        setCurrentLocation('Location error');
+        fetchDashboardData(); // Load data without location
+      }
+    } else {
+      getCurrentLocation();
+    }
+  };
+
+  const getCurrentLocation = () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        fetchWeatherData(latitude, longitude);
+        getLocationName(latitude, longitude);
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        setCurrentLocation('Unable to get location');
+        // Use default coordinates (e.g., Hyderabad, India) as fallback
+        fetchWeatherData(17.3850, 78.4867);
+        setCurrentLocation('Hyderabad, Telangana');
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+  };
+
+  const getLocationName = async (lat: number, lon: number) => {
+    try {
+      const response = await fetch(
+        `${GEOCODING_API_URL}?lat=${lat}&lon=${lon}&limit=1&appid=${WEATHER_API_KEY}`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const location = data[0];
+        setCurrentLocation(`${location.name}, ${location.state || location.country}`);
+      }
+    } catch (error) {
+      console.error('Error getting location name:', error);
+      setCurrentLocation(`Location: ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`);
+    }
+  };
+
+  const fetchWeatherData = async (lat: number, lon: number) => {
+    try {
+      const response = await fetch(
+        `${WEATHER_API_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${WEATHER_API_KEY}`
+      );
+      const data = await response.json();
+      
+      if (data.cod === 200) {
+        const weatherResponse: WeatherData = {
+          temperature: Math.round(data.main.temp),
+          humidity: data.main.humidity,
+          condition: data.weather[0].main,
+          windSpeed: Math.round(data.wind.speed * 3.6), // Convert m/s to km/h
+          rainfall: data.rain ? data.rain['1h'] || 0 : 0,
+          forecast: [
+            { day: 'Today', temp: `${Math.round(data.main.temp)}°C`, condition: data.weather[0].main },
+            { day: 'Tomorrow', temp: `${Math.round(data.main.temp + 2)}°C`, condition: 'Sunny' },
+            { day: 'Day 3', temp: `${Math.round(data.main.temp - 2)}°C`, condition: 'Cloudy' },
+          ]
+        };
+        setWeatherData(weatherResponse);
+      } else {
+        throw new Error('Weather API error');
+      }
     } catch (error) {
       console.error('Error fetching weather data:', error);
       // Fallback sample data
-      const fallbackWeather = {
+      const fallbackWeather: WeatherData = {
         temperature: 28,
         humidity: 65,
         condition: 'Partly Cloudy',
@@ -103,105 +144,88 @@ const Dashboard = () => {
         ]
       };
       setWeatherData(fallbackWeather);
+    } finally {
+      fetchCropData(); // Load crop data after weather
     }
+  };
+
+  const fetchCropData = () => {
+    // Current crops data (from crop cycle controller)
+    const cropsResponse: Crop[] = [
+      {
+        _id: '1',
+        crop: {
+          name: 'Rice',
+          variety: 'Sona Masuri',
+          category: 'Cereal'
+        },
+        plantingArea: { value: 2, unit: 'acre' },
+        cropStage: 'Flowering',
+        timeline: {
+          sowingDate: '2024-07-15',
+          expectedHarvestDate: '2024-11-15'
+        },
+        expenses: { total: 15000 },
+        yield: { expected: 40 },
+        healthStatus: 'Good',
+        nextTask: 'Fertilizer Application',
+        taskDate: '2024-09-25'
+      },
+      {
+        _id: '2',
+        crop: {
+          name: 'Cotton',
+          variety: 'BT Cotton',
+          category: 'Cash Crop'
+        },
+        plantingArea: { value: 1.5, unit: 'acre' },
+        cropStage: 'Vegetative',
+        timeline: {
+          sowingDate: '2024-08-01',
+          expectedHarvestDate: '2024-12-15'
+        },
+        expenses: { total: 12000 },
+        yield: { expected: 25 },
+        healthStatus: 'Moderate',
+        nextTask: 'Disease Check Required',
+        taskDate: '2024-09-22'
+      }
+    ];
+
+    setCurrentCrops(cropsResponse);
+    setLoading(false);
   };
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
-      // Fetch weather data
-      await fetchWeatherData();
-
-      // Current crops data (from crop cycle controller)
-      const cropsResponse = [
-        {
-          _id: '1',
-          crop: {
-            name: 'Rice',
-            variety: 'Sona Masuri',
-            category: 'Cereal'
-          },
-          plantingArea: { value: 2, unit: 'acre' },
-          cropStage: 'Flowering',
-          timeline: {
-            sowingDate: '2024-07-15',
-            expectedHarvestDate: '2024-11-15'
-          },
-          expenses: { total: 15000 },
-          yield: { expected: 40 },
-          healthStatus: 'Good',
-          nextTask: 'Fertilizer Application',
-          taskDate: '2024-09-25'
-        },
-        {
-          _id: '2',
-          crop: {
-            name: 'Cotton',
-            variety: 'BT Cotton',
-            category: 'Cash Crop'
-          },
-          plantingArea: { value: 1.5, unit: 'acre' },
-          cropStage: 'Vegetative',
-          timeline: {
-            sowingDate: '2024-08-01',
-            expectedHarvestDate: '2024-12-15'
-          },
-          expenses: { total: 12000 },
-          yield: { expected: 25 },
-          healthStatus: 'Moderate',
-          nextTask: 'Disease Check Required',
-          taskDate: '2024-09-22'
-        }
-      ];
-
-      setCurrentCrops(cropsResponse);
+      // If we don't have location, use default data
+      if (!weatherData) {
+        const defaultWeather: WeatherData = {
+          temperature: 28,
+          humidity: 65,
+          condition: 'Partly Cloudy',
+          windSpeed: 12,
+          rainfall: 0,
+          forecast: [
+            { day: 'Today', temp: '28°C', condition: 'Partly Cloudy' },
+            { day: 'Tomorrow', temp: '30°C', condition: 'Sunny' },
+            { day: 'Day 3', temp: '26°C', condition: 'Rainy' },
+          ]
+        };
+        setWeatherData(defaultWeather);
+      }
+      fetchCropData();
     } catch (error) {
       Alert.alert('Error', 'Failed to load dashboard data');
-    } finally {
       setLoading(false);
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchDashboardData();
+    await requestLocationPermission(); // Refresh location and weather
     setRefreshing(false);
-  };
-
-  const scrollViewRef = useRef<ScrollView>(null);
-  
-  const scrollToTop = () => {
-    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-  };
-  const handleGetAssist = (crop: Crop) => {
-    // Navigate to AI Assistant screen with crop data
-    navigation.navigate('assistantScreen', { 
-      cropId: crop._id,
-      cropData: crop 
-    });
-  };
-
-  const getHealthStatusColor = (status: string) => {
-    switch (status) {
-      case 'Good': return 'bg-green-500';
-      case 'Moderate': return 'bg-yellow-500';
-      case 'Poor': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const getWeatherIcon = (condition: string) => {
-    switch (condition.toLowerCase()) {
-      case 'sunny': return '☀️';
-      case 'cloudy': return '☁️';
-      case 'partly cloudy': return '⛅';
-      case 'rainy': return '🌧️';
-      case 'clear': return '☀️';
-      case 'rain': return '🌧️';
-      case 'clouds': return '☁️';
-      default: return '🌤️';
-    }
   };
 
   if (loading) {
@@ -214,6 +238,7 @@ const Dashboard = () => {
 
   return (
     <ScrollView
+      ref={scrollViewRef}
       className="flex-1 bg-green-50"
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -224,146 +249,19 @@ const Dashboard = () => {
         <View>
           <Text className="text-xl font-bold text-white">AgriAssist</Text>
           <Text className="text-sm text-white opacity-90 mt-1">
-            🌾 Your Farming Companion
+            📍 {currentLocation}
           </Text>
         </View>
       </View>
 
-      {/* Weather Card */}
-      <View className="bg-white mx-4 my-4 p-5 rounded-xl shadow-sm">
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-lg font-bold text-green-600">🌦️ Today's Weather</Text>
-          <Text className="text-3xl font-bold text-green-600">{weatherData?.temperature}°C</Text>
-        </View>
-        
-        <View className="flex-row justify-between mb-4">
-          <View className="items-center">
-            <Text className="text-2xl mb-1">{getWeatherIcon(weatherData?.condition ?? '')}</Text>
-            <Text className="text-xs text-gray-500">{weatherData?.condition}</Text>
-          </View>
-          <View className="items-center">
-            <Text className="text-base font-semibold text-gray-700 mb-1">💧 {weatherData?.humidity}%</Text>
-            <Text className="text-xs text-gray-500">Humidity</Text>
-          </View>
-          <View className="items-center">
-            <Text className="text-base font-semibold text-gray-700 mb-1">💨 {weatherData?.windSpeed} km/h</Text>
-            <Text className="text-xs text-gray-500">Wind Speed</Text>
-          </View>
-          <View className="items-center">
-            <Text className="text-base font-semibold text-gray-700 mb-1">🌧️ {weatherData?.rainfall} mm</Text>
-            <Text className="text-xs text-gray-500">Rainfall</Text>
-          </View>
-        </View>
+      {/* Weather Component */}
+      <Weather weatherData={weatherData} currentLocation={currentLocation} />
 
-        {/* Weather Forecast */}
-        <View className="flex-row justify-between border-t border-gray-200 pt-4">
-          {weatherData?.forecast?.map((day, index) => (
-            <View key={index} className="items-center">
-              <Text className="text-xs text-gray-500 mb-1">{day.day}</Text>
-              <Text className="text-xl mb-1">{getWeatherIcon(day.condition ?? '')}</Text>
-              <Text className="text-sm font-semibold text-gray-700">{day.temp}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
+      {/* Farmer Current Crops Component */}
+      <FarmerCurrentCrops currentCrops={currentCrops} />
 
-      {/* Current Crops Section */}
-      <View className="mx-4">
-        <Text className="text-xl font-bold text-green-600 mb-4">🌾 Your Current Crops ({currentCrops.length})</Text>
-        
-        {currentCrops.map((crop) => (
-          <View key={crop._id} className="bg-white p-5 rounded-xl mb-4 shadow-sm">
-            {/* Crop Header */}
-            <View className="flex-row justify-between items-start mb-4">
-              <View className="flex-1">
-                <Text className="text-lg font-bold text-green-600 mb-1">
-                  {crop.crop.name} ({crop.crop.variety})
-                </Text>
-                <Text className="text-sm text-gray-500">{crop.crop.category}</Text>
-              </View>
-              <View className={`px-3 py-1 rounded-full ${getHealthStatusColor(crop.healthStatus)}`}>
-                <Text className="text-white text-xs font-semibold">{crop.healthStatus}</Text>
-              </View>
-            </View>
-
-            {/* Crop Details */}
-            <View className="mb-4">
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-sm text-gray-500">📏 Area:</Text>
-                <Text className="text-sm font-semibold text-gray-700">
-                  {crop.plantingArea.value} {crop.plantingArea.unit}
-                </Text>
-              </View>
-              
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-sm text-gray-500">🌱 Stage:</Text>
-                <Text className="text-sm font-semibold text-gray-700">{crop.cropStage}</Text>
-              </View>
-              
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-sm text-gray-500">💰 Investment:</Text>
-                <Text className="text-sm font-semibold text-gray-700">₹{crop.expenses.total.toLocaleString()}</Text>
-              </View>
-              
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-sm text-gray-500">📦 Expected Yield:</Text>
-                <Text className="text-sm font-semibold text-gray-700">
-                  {crop.yield.expected} {crop.plantingArea.unit}
-                </Text>
-              </View>
-            </View>
-
-            {/* Get Assist Button */}
-            <TouchableOpacity
-              className="bg-green-600 flex-row items-center justify-center p-3 rounded-lg"
-              onPress={() => handleGetAssist(crop)}
-            >
-              <Icon name="smart-toy" size={20} color="#ffffff" />
-              <Text className="text-white text-base font-semibold mx-2">Go To Assist</Text>
-              <Icon name="arrow-forward" size={20} color="#ffffff" />
-            </TouchableOpacity>
-          </View>
-        ))}
-      </View>
-
-      {/* Quick Actions */}
-      <View className="mx-4 mb-8">
-        <Text className="text-xl font-bold text-green-600 mb-4">🚀 Quick Actions</Text>
-        
-        <View className="flex-row flex-wrap justify-between">
-          <TouchableOpacity 
-            className="bg-white w-[48%] p-4 rounded-xl items-center mb-3 shadow-sm"
-            onPress={() => navigation.navigate('diseaseDetection')}
-          >
-            <Icon name="search" size={24} color="#16A34A" />
-            <Text className="text-green-600 text-xs font-semibold mt-2 text-center">Disease Detection</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            className="bg-white w-[48%] p-4 rounded-xl items-center mb-3 shadow-sm"
-            onPress={() => navigation.navigate('marketPrices')}
-          >
-            <Icon name="trending-up" size={24} color="#16A34A" />
-            <Text className="text-green-600 text-xs font-semibold mt-2 text-center">Market Prices</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            className="bg-white w-[48%] p-4 rounded-xl items-center mb-3 shadow-sm"
-            onPress={scrollToTop}
-          >
-            <Icon name="wb-sunny" size={24} color="#16A34A" />
-            <Text className="text-green-600 text-xs font-semibold mt-2 text-center">Weather Forecast</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            className="bg-white w-[48%] p-4 rounded-xl items-center mb-3 shadow-sm"
-            onPress={() => navigation.navigate('assistantScreen')}
-          >
-            <Icon name="mic" size={24} color="#16A34A" />
-            <Text className="text-green-600 text-xs font-semibold mt-2 text-center">Voice Assistant</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* Quick Access Component */}
+      <QuickAccess scrollToTop={scrollToTop} />
     </ScrollView>
   );
 };
