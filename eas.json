@@ -1,12 +1,17 @@
 {
   "cli": {
     "version": ">= 16.19.3",
-    "appVersionSource": "remote"
+    "appVersionSource": "remote",
+    "npm": "npm"
   },
+
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "node": "18.20.3",
+      "npm": "npm",
+      "env": {}
     },
     "preview": {
       "distribution": "internal"
