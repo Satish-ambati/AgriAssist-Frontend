@@ -245,14 +245,14 @@ const Dashboard = () => {
       }
     >
       {/* Header */}
-      <View className="flex-row justify-between items-center bg-green-600 px-5 pt-12 pb-5">
-        <View>
-          <Text className="text-xl font-bold text-white">AgriAssist</Text>
-          <Text className="text-sm text-white opacity-90 mt-1">
-            📍 {currentLocation}
-          </Text>
-        </View>
-      </View>
+      <View className="flex-row justify-between rounded-b-2xl shadow-md items-center bg-green-600 px-5 pt-12 pb-5">
+  <View>
+    <Text className="text-xl font-bold text-white">AgriAssist</Text>
+    <Text className="text-sm text-white opacity-90 mt-1">
+      📍 {currentLocation}
+    </Text>
+  </View>
+</View>
 
       {/* Weather Component */}
       <Weather weatherData={weatherData} currentLocation={currentLocation} />
