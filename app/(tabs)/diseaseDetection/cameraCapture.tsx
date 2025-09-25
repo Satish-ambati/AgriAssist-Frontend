@@ -169,6 +169,7 @@ export default function CameraCapture() {
         onPress={()=>{
           router.push({
             pathname:"/diseaseDetection/diseaseResult",
+            params:{images:JSON.stringify(images)},
           });
           setImages([]);
         }}

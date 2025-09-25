@@ -1,9 +1,12 @@
 
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import {useRouter} from "expo-router"
+import { View, Text, ScrollView, TouchableOpacity,Modal,Image } from "react-native";
+import {useLocalSearchParams, useRouter} from "expo-router"
 export default function DiseaseResult() {
   const router=useRouter();
+  const params=useLocalSearchParams();
+  const images:string[]=params.images?JSON.parse(params.images as string):[];
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [expanded, setExpanded] = useState({
     treatment: false,
     preventive: false,
@@ -62,6 +65,23 @@ export default function DiseaseResult() {
             Disease Analysis
           </Text>
         </View>
+            {/* 📸 Scanned Images */}
+        {images.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="bg-white rounded-xl p-4 mb-4 border border-emerald-200"
+          >
+            {images.map((uri, idx) => (
+              <TouchableOpacity key={idx} onPress={() => setPreviewImage(uri)}>
+                <Image
+                  source={{ uri }}
+                  className="w-32 h-32 mr-3 rounded-lg border-2 border-green-400"
+                />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
         {/* Disease Detection */}
         <View className="bg-white rounded-xl p-4 mb-4 border border-emerald-200">
@@ -171,6 +191,20 @@ export default function DiseaseResult() {
           </Text>
         </View>
       </View>
+       <Modal visible={!!previewImage} transparent animationType="fade">
+        <View className="flex-1 bg-black justify-center items-center">
+          <Image
+            source={{ uri: previewImage || "" }}
+            className="w-full h-[80%] resize-contain"
+          />
+          <TouchableOpacity
+            onPress={() => setPreviewImage(null)}
+            className="absolute top-12 right-5 bg-red-600 p-2 rounded-full"
+          >
+            <Text className="text-white text-lg">✕</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
