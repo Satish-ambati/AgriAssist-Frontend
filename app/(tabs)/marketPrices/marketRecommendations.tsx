@@ -229,7 +229,7 @@ export default function PricesScreen() {
       </View>
 
       <FlatList
-        data={villages}
+        data={villages ?? []}
         keyExtractor={(item) => item.village}
         renderItem={renderVillageItem}
         contentContainerStyle={{ padding: 16 }}
