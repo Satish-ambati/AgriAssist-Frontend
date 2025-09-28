@@ -44,6 +44,7 @@ const RegisterScreen = () => {
   const [locationFetched, setLocationFetched] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
+  const [serverOtp , setServerOtp] = useState();
   
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -133,6 +134,7 @@ const RegisterScreen = () => {
         setCurrentStep('otp');
         slideToStep(1);
         setOtpTimer(60);
+        setServerOtp(response.data.otp)
         Alert.alert('Success', 'OTP sent to your phone number');
       } else {
         Alert.alert('Error', response.data.message || 'Failed to send OTP');
@@ -180,18 +182,12 @@ const RegisterScreen = () => {
     setIsLoading(true);
     
     try {
-      const response = await axios.post(
-        `${Api}/api/auth/verify-otp-for-register`,
-        { code: otpString },
-        { withCredentials: true }
-      );
-      
-      if (response.data.success) {
+      if (serverOtp === otpString) {
         setCurrentStep('details');
         slideToStep(2);
         Alert.alert('Success', 'OTP verified successfully');
       } else {
-        Alert.alert('Error', response.data.message || 'Invalid OTP');
+        Alert.alert('Error', 'Invalid OTP');
       }
     } catch (error: any) {
       console.error('Verify OTP Error:', error);
@@ -363,7 +359,7 @@ const RegisterScreen = () => {
           [{
             text: "Continue",
             onPress: () => {
-              router.push('/(tabs)/dashboard/dashboard');
+              router.push('/(tabs)/dashboard');
             }
           }]
         );

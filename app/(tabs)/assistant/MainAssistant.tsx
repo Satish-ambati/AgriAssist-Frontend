@@ -4,7 +4,7 @@ import React from 'react'
 const MainAssistant = () => {
   return (
     <View>
-      <Text>MainAssistant</Text>
+      <Text>Main Assistant</Text>
     </View>
   )
 }

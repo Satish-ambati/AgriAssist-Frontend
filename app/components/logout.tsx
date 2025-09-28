@@ -1,4 +1,4 @@
-import { Alert, TouchableOpacity, Text, View, ActivityIndicator } from "react-native";
+import { Alert, TouchableOpacity, Text, ActivityIndicator } from "react-native";
 import React, { useState } from "react";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
@@ -34,9 +34,8 @@ const Logout: React.FC = () => {
   };
 
   return (
-    <View className="flex-1 justify-center items-center">
       <TouchableOpacity
-        className={`bg-red-600 px-6 py-3 rounded-xl shadow-lg ${
+        className={`bg-red-600 px-3 py-1 rounded-xl shadow-lg ${
           isLoading ? "bg-red-400" : "bg-red-600"
         }`}
         onPress={handleLogout}
@@ -48,7 +47,6 @@ const Logout: React.FC = () => {
           <Text className="text-white font-semibold text-lg">Logout</Text>
         )}
       </TouchableOpacity>
-    </View>
   );
 };
 

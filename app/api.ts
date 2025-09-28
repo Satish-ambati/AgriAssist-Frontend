@@ -1,3 +1,1 @@
-export const Api : string = "http://192.168.68.121:9000" ; 
-
-    
+export const Api = "http://10.209.182.154:9000" ;

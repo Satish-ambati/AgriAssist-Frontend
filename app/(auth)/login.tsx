@@ -68,7 +68,7 @@ const Login: React.FC = () => {
           setFarmerInfo(user , newAccessToken) ;
 
           // Optionally navigate user directly if already authenticated
-          router.replace("/(tabs)/dashboard/dashboard");
+          router.replace("/(tabs)/dashboard");
         } else {
           console.warn("Refresh token rejected:", response.data.message);
           await SecureStore.deleteItemAsync("refreshToken");
@@ -202,7 +202,7 @@ const Login: React.FC = () => {
             text: "Continue",
             onPress: () => {
               // Navigate to dashboard or main app screen
-              router.push('/(tabs)/dashboard/dashboard')
+              router.push('/(tabs)/dashboard')
             }
           }
         ]);

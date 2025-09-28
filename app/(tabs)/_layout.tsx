@@ -1,7 +1,6 @@
-import { FontAwesome5, Ionicons } from '@expo/vector-icons';
-import { Tabs, router } from 'expo-router';
-import React from 'react';
-import { View, Pressable, Text } from 'react-native';
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
+import { Text } from "react-native";
 
 export default function TabsLayout() {
   return (
@@ -9,92 +8,85 @@ export default function TabsLayout() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#F9FAFB',
-          borderTopColor: '#E5E7EB',
+          backgroundColor: "#F9FAFB",
+          borderTopColor: "#E5E7EB",
+          borderTopWidth: 1,
           height: 70,
+          paddingBottom: 5,
         },
-        tabBarIcon: ({ color, size, focused }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'ellipse-outline';
+        tabBarIcon: ({ size, focused }) => {
+          let iconName: string = "ellipse-outline";
+
+          // Default to Ionicons
+          let IconComponent: any = Ionicons;
 
           switch (route.name) {
-            case 'dashboard':
-              iconName = focused ? 'grid' : 'grid-outline';
+            case "dashboard":
+              iconName = focused ? "grid" : "grid-outline";
               break;
-            case 'diseaseDetection':
-              iconName = focused ? 'medkit' : 'medkit-outline';
+            case "diseaseDetection":
+              iconName = focused ? "medkit" : "medkit-outline"; // 🌱 Plant health
               break;
-            case 'marketPrices':
-              iconName = focused ? 'pricetag' : 'pricetag-outline';
+            case "assistant":
+              IconComponent = FontAwesome5; // use FA5 for robot
+              iconName = "robot";
               break;
-            case 'profile':
-              iconName = focused ? 'person' : 'person-outline';
+            case "marketPrices":
+              iconName = focused ? "pricetag" : "pricetag-outline";
+              break;
+            case "history":
+              iconName = focused ? "receipt" : "receipt-outline";
               break;
           }
 
           return (
-            <Ionicons
+            <IconComponent
               name={iconName}
               size={size}
-              color={focused ? '#525652ff' : '#6B7280'} // green when active, gray when inactive
-              style={{ opacity: focused ? 1 : 0.5 }} // inactive = opaque
+              color={focused ? "#059669" : "#6B7280"}
+              solid={IconComponent === FontAwesome5} // robot needs solid style
             />
           );
         },
-        tabBarLabel: ({ focused, color }) => {
-          // Assistant has no label
-          if (route.name === 'assistant') return null;
+        tabBarLabel: ({ focused }) => {
+          let label;
+          switch (route.name) {
+            case "dashboard":
+              label = "Dashboard";
+              break;
+            case "diseaseDetection":
+              label = "Disease";
+              break;
+            case "assistant":
+              label = "Assistant";
+              break;
+            case "marketPrices":
+              label = "Prices";
+              break;
+            case "history":
+              label = "History";
+              break;
+          }
 
           return (
             <Text
               style={{
                 fontSize: 12,
-                fontWeight: focused ? 'bold' : 'normal',
-                color: focused ? '#525652ff' : '#6B7280',
-                opacity: focused ? 1 : 0.5,
+                fontWeight: focused ? "bold" : "normal",
+                color: focused ? "#059669" : "#6B7280",
               }}
             >
-              {route.name === 'dashboard'
-                ? 'Dashboard'
-                : route.name === 'diseaseDetection'
-                ? 'Disease'
-                : route.name === 'marketPrices'
-                ? 'Prices'
-                : route.name === 'profile'
-                ? 'Profile'
-                : ''}
+              {label}
             </Text>
           );
         },
       })}
     >
-      <Tabs.Screen name="dashboard" options={{ title: 'Dashboard' }} />
-      <Tabs.Screen name="diseaseDetection" options={{ title: 'Disease' }} />
-
-      {/* Custom middle tab */}
-      <Tabs.Screen
-        name="assistant"
-        options={{
-          tabBarButton: () => (
-            <Pressable
-              onPress={() => router.push('/assistantScreen')}
-              style={{ justifyContent: 'center', alignItems: 'center' }}
-            >
-              <View
-                className="
-                  w-20 h-20 rounded-full justify-center items-center
-                  shadow-lg shadow-black -mt-6
-                  bg-emerald-600
-                "
-              >
-                <FontAwesome5 name="robot" size={28} color="white" />
-              </View>
-            </Pressable>
-          ),
-        }}
-      />
-
-      <Tabs.Screen name="marketPrices" options={{ title: 'Prices' }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+      <Tabs.Screen name="dashboard" />
+      <Tabs.Screen name="diseaseDetection" />
+      <Tabs.Screen name="assistant" />
+      <Tabs.Screen name="marketPrices" />
+      <Tabs.Screen name="history" />
     </Tabs>
   );
 }
