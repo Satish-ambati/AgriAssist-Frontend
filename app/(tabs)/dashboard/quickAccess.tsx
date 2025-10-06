@@ -3,11 +3,9 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
-interface QuickAccessProps {
-  scrollToTop: () => void;
-}
 
-const QuickAccess: React.FC<QuickAccessProps> = ({ scrollToTop }) => {
+
+const QuickAccess: React.FC = () => {
 
   return (
     <View className="mx-4 mb-8">
@@ -40,25 +38,25 @@ const QuickAccess: React.FC<QuickAccessProps> = ({ scrollToTop }) => {
 
         <TouchableOpacity
           className="bg-white w-[48%] p-4 rounded-xl items-center mb-3 shadow-sm border border-green-100"
-          onPress={scrollToTop}
+          onPress={() => router.push('/chat')}
         >
           <View className="bg-green-50 rounded-full p-2 mb-2">
-            <MaterialIcons name="wb-sunny" size={24} color="#16A34A" />
+            <MaterialIcons name="spatial-tracking" size={24} color="#16A34A" />
           </View>
           <Text className="text-green-600 text-sm font-semibold text-center">
-            Weather Forecast
+            AI Assistant
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           className="bg-white w-[48%] p-4 rounded-xl items-center mb-3 shadow-sm border border-green-100"
-          onPress={() => router.push('/chat')}
+          onPress={() => router.push('/ExpenseDiary')}
         >
           <View className="bg-green-50 rounded-full p-2 mb-2">
-            <MaterialIcons name="mic" size={24} color="#16A34A" />
+            <MaterialIcons name="account-balance" size={24} color="#16A34A" />
           </View>
           <Text className="text-green-600 text-sm font-semibold text-center">
-            AI Assistant
+            Expense Dairy
           </Text>
         </TouchableOpacity>
       </View>

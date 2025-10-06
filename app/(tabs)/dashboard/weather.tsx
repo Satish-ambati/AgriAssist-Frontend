@@ -185,8 +185,8 @@ const Weather: React.FC = () => {
       {/* Header */}
       <View className="bg-green-600 p-4 flex-row justify-between items-center">
         <Text className="text-white text-lg font-light">🌤️ Weather</Text>
-        <TouchableOpacity onPress={fetchWeatherData}>
-          <Text className="text-green-100 text-sm">🔄 Refresh</Text>
+        <TouchableOpacity onPress={fetchWeatherData} className=" rounded-full px-2 bg-green-100 py-1">
+          <Text className="text-green-500 text-sm"> Refresh</Text>
         </TouchableOpacity>
       </View>
 

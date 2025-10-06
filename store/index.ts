@@ -2,10 +2,7 @@
 import { Farmer, FarmerState } from "@/types";
 import { create } from "zustand";
 
-
-
-
-
+// ---------------- Farmer Store ----------------
 export const useFarmerStore = create<FarmerState>((set) => ({
   farmerInfo: {
     farmer: null,
@@ -22,3 +19,4 @@ export const useFarmerStore = create<FarmerState>((set) => ({
       farmerInfo: { farmer: null, accessToken: null },
     }),
 }));
+

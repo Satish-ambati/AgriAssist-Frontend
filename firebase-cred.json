@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "agriassist-notifications",
+  "private_key_id": "cacc469934c4f70141d73567fa61d1f6ae232da6",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCZgMjRxQVS0R38\nXfG/NDXJJvIf06JRwGyGPRIVPNjAufb0fCt78OEc4VrvAmcVIAAzQ9UzGHCvaW+l\neWsXarJlnIvpRC8+pPH7XDzflFsvLSrGFp7UE0ly+vpYF+MlE6FN9XEMDBJkcMzW\nAYb6LYgFMrkeQtpATk9tB7mrsTNlDvWMhHh3xA0OBRG9v6txXEKkrO1lyFz3NDGG\nYea44ENoqLa2YK/avTbJZcJMuYoipx9zILuKwGDlAOT+ZmuHnHn4lg7CLjMj/yaW\ncdNehUPi/PIv6o0KAIZp0UI4XdLeey3VR0Ivw3w2yICTJJm+fgmm645XkhoebXHf\nl+kN1/1lAgMBAAECggEABdvetMFfWnGodYk+ALB4D3oEEQDqSuwcRRdjPE161ghP\n2II9kQwSaFOVo+++I+Lfy+HrHkZXIerVTxL0tz6xGaQnyiFHG43+8NTsod/77WLW\ni7Vk6u7j68nDVyw6O20MLnlcW9UnuPVK0pQ/8aAq3X/tHuGQV2OY/OFbND/Q/vdl\nay6dI86Ob4/iS5VbJdVEB81FjAp49tJHr9no4lhVOGYi9RYLxJSIyKNc92lBKcZX\nptrJibum/WeO98hp0TRdOT/KPQJhVJ6ULVDknFSTLlkH1u7u48Ax28/J7b7uV1FY\ngmmki3S6U6skVmGDXsNaGRaTNmSMsiLNK3kLu3IO9QKBgQDW/9H4RzzVY2TtTrAZ\nZbNtod8ch58jZQKEp6h+2uEra6tjXCmQVRNGZWfXgVJOmA1e0QqYpuQUd21LLe+h\n9e1SvJdE8s/EZitMwf/k1fGKLPVa8QhbYSzNBxSuDeEu60+Of3FuS745TYQWgLaF\n1xF6vAnf5UMxx1O/qJ8UxTzb7wKBgQC2xr4ihf61WgdWvRTmO9dPQzp9FB01ly8Q\njw+gNiHaUtGMQKuVZdMlWHP6rkY9a+hO2U58pxxkt+cyeYP9VQmuxpDdAnTaDt8r\nnMivWECXX20TOi24dOkCrtA21gxM2ex+oX3rcJyLzM8WjDurMxqtiMnytl64fxs9\nrgPxcSJ36wKBgCZdymti0wFFVmpeo2A03NsQis79iLF5QgTIInJYvtvPv+rgNG6U\nL/dc+zXi1vw9eA1WgmyRQ5w/X5qN3Phq+WnNS7U7G0Zx8QImkHKWlx7QPQx4fMRJ\nyAPiYpdY1LlZtn24UlabX5u8MHkPiQLDSVQ8oAp7UA1fA5vtDE5ZkC2zAoGAB7EZ\nc058R5mAUZAnfwDpsLY9keH00LqKCoJav/1HM27kzqgyEFl2p02vo88Nuav+3MKc\nYPaPZVWv7xnaCiE4BRjqI8LktACIN8ejUm2+WiBz8Kk0H10cKTa+IHCll95b64BU\nUkIs9F0sIeDI6g1+g+sLxKEUH2OJ+/CEzfZa4v0CgYEAssjpwdcSV2fqMWC67GQP\nuAAlQi2OfI/ZrUSYMJPJDWX+YtOOe8d1MQi/c3WsfDK927YenJ6VoK5frESOY3ye\n7fyVTrDYmhApx7L/lM0kUTkH4w1uM3sJv9iftI3vZfUW5ozUpl+SVUKNuJlXs2Ra\nlbAjzFvfTMR5ZmqDyCJl4FM=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@agriassist-notifications.iam.gserviceaccount.com",
+  "client_id": "102140867403950657236",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40agriassist-notifications.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

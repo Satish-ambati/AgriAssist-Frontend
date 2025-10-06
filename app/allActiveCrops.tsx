@@ -1,81 +1,48 @@
+import React from "react";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useEffect } from "react";
-import { ScrollView, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
-import { useCropStore } from "@/store/cropStore";
-import { useFarmerStore } from "@/store";
+import { Crop } from "./(tabs)/dashboard/farmerCurrentCrops";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const FarmerCurrentCrops: React.FC = () => {
-  const { crops, fetchCrops } = useCropStore(); // Zustand store
-  const { farmerInfo } = useFarmerStore(); // Farmer info
-
-  const activeCrops = crops.filter((crop) => crop.status === "Active");
-
-  // Fetch crops when farmerInfo is available
-  useEffect(() => {
-    const loadCrops = async () => {
-      if (!farmerInfo?.farmer?._id) return;
-
-      try {
-        await fetchCrops(farmerInfo.farmer._id); // Pass farmerId to fetchCrops
-      } catch (err) {
-        console.error("Failed to fetch crops:", err);
-      }
-    };
-
-    loadCrops();
-  }, [farmerInfo]);
+const AllActiveCrops: React.FC = () => {
+  const { crops } = useLocalSearchParams<{ crops: string }>();
+  const currentCrops: Crop[] = crops ? JSON.parse(crops) : [];
+  const activeCrops = currentCrops.filter((crop) => crop.status === "Active");
 
   const getHealthStatusColor = (status: string) => {
     switch (status) {
-      case "Active":
-        return "bg-green-500";
-      case "Completed":
-        return "bg-blue-500";
-      case "Failed":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
+      case "Active": return "bg-green-500";
+      case "Completed": return "bg-blue-500";
+      case "Failed": return "bg-red-500";
+      default: return "bg-gray-500";
     }
   };
 
   const getCropStageIcon = (stage: string) => {
     switch (stage) {
-      case "Planning":
-        return "📋";
-      case "Sowing":
-        return "🌱";
-      case "Germination":
-        return "🌿";
-      case "Vegetative":
-        return "🌾";
-      case "Flowering":
-        return "🌸";
-      case "Fruiting":
-        return "🍃";
-      case "Maturity":
-        return "🌽";
-      case "Harvested":
-        return "📦";
-      default:
-        return "🌱";
+      case "Planning": return "📋";
+      case "Sowing": return "🌱";
+      case "Germination": return "🌿";
+      case "Vegetative": return "🌾";
+      case "Flowering": return "🌸";
+      case "Fruiting": return "🍃";
+      case "Maturity": return "🌽";
+      case "Harvested": return "📦";
+      default: return "🌱";
     }
   };
 
   const getSeasonColor = (season: string) => {
     switch (season) {
-      case "Kharif":
-        return "text-green-600";
-      case "Rabi":
-        return "text-red-600";
-      case "Zaid":
-        return "text-orange-600";
-      default:
-        return "text-gray-500";
+      case "Kharif": return "text-green-600";
+      case "Rabi": return "text-red-600";
+      case "Zaid": return "text-orange-600";
+      default: return "text-gray-500";
     }
   };
 
-  const handleGetAssist = (crop: any) => {
+  const handleGetAssist = (crop: Crop) => {
     router.push({
       pathname: "/assistantScreen",
       params: {
@@ -85,51 +52,28 @@ const FarmerCurrentCrops: React.FC = () => {
     });
   };
 
-  const handleSeeAll = () => {
-    router.push({
-      pathname: "/allActiveCrops",
-      params: { crops: JSON.stringify(activeCrops) },
-    });
-  };
-
-  if (!farmerInfo) {
-    return (
-      <View className="flex-1 justify-center items-center py-10">
-        <ActivityIndicator size="large" color="#16a34a" />
-        <Text className="text-gray-500 mt-3">Loading Farmer Data...</Text>
-      </View>
-    );
-  }
-
   return (
-    <View className="mx-4">
-      <View className="flex-row justify-between items-center mb-4">
-        <Text className="text-2xl font-bold text-green-500">
-          🌾 Your Current Crops ({activeCrops.length})
-        </Text>
-        {activeCrops.length > 0 && (
-          <TouchableOpacity
-            onPress={handleSeeAll}
-            className="flex flex-row items-center justify-center"
-          >
-            <Text className="px-1 text-sm" style={{ color: "skyblue" }}>
-              View all
-            </Text>
-            <MaterialIcons name="chevron-right" color={"skyblue"} />
-          </TouchableOpacity>
-        )}
+    <SafeAreaView className="flex-1 bg-white">
+      {/* Header */}
+      <View className="flex-row items-center justify-between bg-white px-4 py-3 ">
+        <TouchableOpacity onPress={() => router.back()} className="p-1">
+          <MaterialIcons name="arrow-back" size={24} color="#16a34a" />
+        </TouchableOpacity>
+        <Text className="text-lg font-bold text-green-500">🌾 All Active Crops ({activeCrops.length})</Text>
+        <View style={{ width: 24 }} /> 
       </View>
 
-      {activeCrops.length === 0 ? (
-        <View className="bg-white p-5 rounded-xl shadow items-center">
-          <Text className="text-gray-500">
-            No active crops found. Add your first crop to get started.
-          </Text>
-        </View>
-      ) : (
-        <ScrollView horizontal={false}>
-          {activeCrops.slice(0, 2).map((crop) => (
-            <View key={crop._id} className="bg-white p-5 rounded-xl mb-4 shadow">
+      {/* Content */}
+      <ScrollView className="mx-4 mt-4">
+
+
+        {activeCrops.length === 0 ? (
+          <View className="bg-white p-5 rounded-xl shadow items-center">
+            <Text className="text-gray-500">No active crops found.</Text>
+          </View>
+        ) : (
+          activeCrops.map((crop) => (
+            <View key={crop._id} className="bg-green-50 border border-green-400  p-5 rounded-xl mb-4 shadow">
               {/* Crop Header */}
               <View className="flex-row justify-between items-start mb-4">
                 <View className="flex-1">
@@ -153,7 +97,7 @@ const FarmerCurrentCrops: React.FC = () => {
                   <Text className="text-sm font-semibold text-gray-700">{crop.cropStage}</Text>
                 </View>
 
-                {crop.timeline?.sowingDate && (
+                {crop.timeline.sowingDate && (
                   <View className="flex-row justify-between">
                     <Text className="text-sm text-gray-500">🗓️ Sowing Date:</Text>
                     <Text className="text-sm font-semibold text-gray-700">
@@ -162,7 +106,7 @@ const FarmerCurrentCrops: React.FC = () => {
                   </View>
                 )}
 
-                {crop.timeline?.expectedHarvestDate && (
+                {crop.timeline.expectedHarvestDate && (
                   <View className="flex-row justify-between">
                     <Text className="text-sm text-gray-500">🎯 Expected Harvest:</Text>
                     <Text className="text-sm font-semibold text-gray-700">
@@ -189,7 +133,7 @@ const FarmerCurrentCrops: React.FC = () => {
                   </View>
                 )}
 
-                {crop.timeline?.duration && (
+                {crop.timeline.duration && (
                   <View className="flex-row justify-between">
                     <Text className="text-sm text-gray-500">⏱️ Duration:</Text>
                     <Text className="text-sm font-semibold text-gray-700">{crop.timeline.duration} days</Text>
@@ -200,9 +144,7 @@ const FarmerCurrentCrops: React.FC = () => {
               {/* AI Recommendations */}
               {crop.aiRecommendations?.initialPlan && (
                 <View className="bg-green-50 p-2 rounded-md mb-3">
-                  <Text className="text-green-500 text-xs font-semibold">
-                    🤖 AI Recommendations Available
-                  </Text>
+                  <Text className="text-green-500 text-xs font-semibold">🤖 AI Recommendations Available</Text>
                 </View>
               )}
 
@@ -212,17 +154,15 @@ const FarmerCurrentCrops: React.FC = () => {
                 onPress={() => handleGetAssist(crop)}
               >
                 <MaterialIcons name="smart-toy" size={20} color="white" />
-                <Text className="text-white text-base font-semibold mx-2">
-                  Get AI Assistance
-                </Text>
+                <Text className="text-white text-base font-semibold mx-2">Get AI Assistance</Text>
                 <MaterialIcons name="arrow-forward" size={20} color="white" />
               </TouchableOpacity>
             </View>
-          ))}
-        </ScrollView>
-      )}
-    </View>
+          ))
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
-export default FarmerCurrentCrops;
+export default AllActiveCrops;
