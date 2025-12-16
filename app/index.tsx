@@ -5,6 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { Api } from "./api";
 import { useFarmerStore } from "@/store";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const options = {
   headerShown: false, // <- hides the header
@@ -36,7 +37,6 @@ export default function Index() {
     setIsAuthenticated(false);
   };
 
-  
 
   // Initial fade-in animation
   useEffect(() => {
@@ -123,10 +123,7 @@ export default function Index() {
           }, 1000);
         }
       } catch (error: any) {
-        console.error(
-          "Failed to refresh token:",
-          error.response?.data || error.message
-        );
+
         await SecureStore.deleteItemAsync("refreshToken");
         resetForm();
         setIsLoading(false);
@@ -194,7 +191,7 @@ export default function Index() {
   };
 
   return (
-    <View className="flex-1 bg-green-50">
+    <SafeAreaView className="flex-1 bg-green-50">
       {/* Decorative background elements */}
       <View className="absolute top-24 right-12 w-16 h-16 bg-green-100 rounded-full opacity-60" />
       <View className="absolute top-48 left-10 w-12 h-12 bg-green-200 rounded-full opacity-40" />
@@ -295,6 +292,6 @@ export default function Index() {
           </Text>
         </View>
       </Animated.View>
-    </View>
+    </SafeAreaView>
   );
 }

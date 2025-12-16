@@ -1,210 +1,280 @@
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Api, IP } from "@/app/api";
+import * as SecureStore from "expo-secure-store";
 
-import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity,Modal,Image } from "react-native";
-import {useLocalSearchParams, useRouter} from "expo-router"
+
 export default function DiseaseResult() {
-  const router=useRouter();
-  const params=useLocalSearchParams();
-  const images:string[]=params.images?JSON.parse(params.images as string):[];
-    const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const router = useRouter();
+  const params = useLocalSearchParams();
+
+  const baseURL = `http://${IP}:8000/uploads/`;
+
+  const images: string[] = params.results
+    ? JSON.parse(params.results as string).images
+    : [];
+  const results: any[] = params.results
+    ? JSON.parse(params.results as string).predictions
+    : [];
+
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [expanded, setExpanded] = useState({
     treatment: false,
     preventive: false,
     forecast: false,
   });
 
-  // Static Data
-  const aiAnalysis = {
-    detectedDisease: {
-      name: "Late Blight",
-      scientificName: "Phytophthora infestans",
-      confidence: 0.92,
-      severity: "Medium",
-    },
-    recommendations: {
-      treatment: [
-        {
-          method: "Spray",
-          product: "Copper Fungicide",
-          dosage: "2g/L",
-          applicationMethod: "Foliar spray",
-          timingInstructions: "Once every 7 days",
-          precautions: [
-            "Wear gloves",
-            "Avoid contact with skin",
-            "Do not inhale spray",
-          ],
+  const [loadingPlan, setLoadingPlan] = useState(false);
+
+  // Treatment plan fetched from backend
+  const [treatmentPlan, setTreatmentPlan] = useState<string[]>([]);
+
+  const aiAnalysis = results[selectedIndex] || {};
+  const diseaseName = aiAnalysis?.disease?.trim() || "No disease detected";
+  const hasDisease = diseaseName !== "No disease detected";
+
+  const confidence = aiAnalysis?.confidence ?? 0;
+  const severity = aiAnalysis?.severity ?? "N/A";
+  const plant = aiAnalysis?.plant ?? "Unknown";
+  const damagePercent = aiAnalysis?.damage_percent ?? 0;
+  const forecast = aiAnalysis?.forecast ?? [];
+
+  // ----------------------------------------
+  // FETCH TREATMENT PLAN FROM BACKEND
+  // ----------------------------------------
+  const fetchTreatmentPlan = async () => {
+    if (!hasDisease) return;
+
+    try {
+      setLoadingPlan(true);
+
+      const token = await SecureStore.getItemAsync("refreshToken");
+
+      const response = await fetch(Api + "/api/disease/get-treatment-plan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
-      ],
-      
-      preventiveMeasures: [
-        "Ensure proper spacing",
-        "Keep field dry",
-        "Regular monitoring",
-      ],
-      followUpDays: 7,
-    },
-    diseaseRiskPercent: 68,
+        body: JSON.stringify({ predictions: [aiAnalysis] }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setTreatmentPlan(data.treatmentPlan || []);
+      } else {
+        setTreatmentPlan(["Unable to generate treatment plan"]);
+      }
+    } catch (err) {
+      console.log("Treatment Plan Error:", err);
+      setTreatmentPlan(["Server error generating treatment plan"]);
+    } finally {
+      setLoadingPlan(false);
+    }
   };
 
-  const weatherRisk = {
-    description:
-      "High humidity and frequent rainfall predicted; fungal diseases likely",
-    riskLevel: "High",
-  };
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [params.results]);
+
+  useEffect(() => {
+    fetchTreatmentPlan();
+  }, [selectedIndex]);
 
   return (
-    <ScrollView className="flex-1 bg-emerald-50">
-      <View className="p-4">
-        <TouchableOpacity onPress={()=>router.back()} className="mb-4 bg-emrald-200 rounded-lg p-2 w-28">
-                    <Text className="text-center text-emerald-900 font-bold">← Back</Text>
-        </TouchableOpacity>
-        {/* Header */}
-        <View className="items-center mb-6">
-          <Text className="text-2xl font-bold text-emerald-900">
-            Disease Analysis
-          </Text>
-        </View>
-            {/* 📸 Scanned Images */}
-        {images.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="bg-white rounded-xl p-4 mb-4 border border-emerald-200"
-          >
-            {images.map((uri, idx) => (
-              <TouchableOpacity key={idx} onPress={() => setPreviewImage(uri)}>
-                <Image
-                  source={{ uri }}
-                  className="w-32 h-32 mr-3 rounded-lg border-2 border-green-400"
-                />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
-
-        {/* Disease Detection */}
-        <View className="bg-white rounded-xl p-4 mb-4 border border-emerald-200">
-          <Text className="text-xl font-bold text-emerald-900">
-            Detection Results
-          </Text>
-          <Text className="mt-2 text-lg font-semibold text-gray-800">
-            {aiAnalysis.detectedDisease.name}
-          </Text>
-          <Text className="italic text-gray-500 mb-2">
-            {aiAnalysis.detectedDisease.scientificName}
-          </Text>
-          <Text className="text-gray-600">
-            Confidence: {(aiAnalysis.detectedDisease.confidence * 100).toFixed(1)}%
-          </Text>
-          <Text className="mt-1 font-semibold text-orange-500">
-            Severity: {aiAnalysis.detectedDisease.severity}
-          </Text>
-        </View>
-
-        {/* Treatment Plan */}
-        <TouchableOpacity
-          onPress={() =>
-            setExpanded({ ...expanded, treatment: !expanded.treatment })
-          }
-        >
-          <View className="bg-green-100 rounded-xl p-4 mb-4">
-            <Text className="text-lg font-bold text-green-800">
-              Treatment Plan {expanded.treatment ? "▲" : "▼"}
+    <SafeAreaView className="flex-1 bg-emerald-50">
+      <ScrollView className="flex-1">
+        <View className="p-4">
+          {/* Header */}
+          <View className="items-center flex flex-row justify-between mb-6">
+            <TouchableOpacity onPress={() => router.replace("/diseaseDetection")}>
+              <Text className="text-center text-2xl text-emerald-900 font-bold">
+                ←
+              </Text>
+            </TouchableOpacity>
+            <Text className="text-2xl font-bold text-emerald-900">
+              Disease Analysis
             </Text>
-            {expanded.treatment && (
-              <View className="mt-3">
-                {aiAnalysis.recommendations.treatment.map((treat, idx) => (
-                  <View
-                    key={idx}
-                    className="bg-white p-3 rounded-lg mb-3 border border-blue-200"
-                  >
-                    <Text>Method: {treat.method}</Text>
-                    <Text>Product: {treat.product}</Text>
-                    <Text>Dosage: {treat.dosage}</Text>
-                    <Text>Timing: {treat.timingInstructions}</Text>
-                    <Text className="font-semibold mt-2">Precautions:</Text>
-                    {treat.precautions.map((p, i) => (
-                      <Text key={i}>- {p}</Text>
-                    ))}
+            <View />
+          </View>
+
+          {/* Images */}
+          {images.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="bg-white rounded-xl p-4 mb-4 border border-emerald-200"
+            >
+              {images.map((img, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  onPress={() => setSelectedIndex(idx)}
+                >
+                  <Image
+                    source={{ uri: `${baseURL + img}?t=${Date.now()}` }}
+                    className={`w-32 h-32 mr-3 rounded-lg border-2 ${
+                      selectedIndex === idx
+                        ? "border-green-400"
+                        : "border-gray-300 opacity-40"
+                    }`}
+                  />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+
+          {/* Detection Results */}
+          <View className="bg-white rounded-2xl p-5 mb-5 border border-emerald-300 shadow-md">
+            <Text className="text-2xl font-bold text-emerald-900 mb-3">
+              Detection Summary
+            </Text>
+
+            <View className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+              <Text className="text-lg font-semibold text-gray-900">
+                {diseaseName}
+              </Text>
+
+              {hasDisease && (
+                <>
+                  <Text className="italic text-emerald-700 mt-1">{plant}</Text>
+
+                  {/* Confidence */}
+                  <View className="flex-row items-center mt-3">
+                    <Text className="font-semibold text-gray-700">Confidence:</Text>
+                    <Text className="ml-2 text-emerald-700 font-bold">
+                      {(confidence * 100).toFixed(1)}%
+                    </Text>
                   </View>
-                ))}
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
 
-        {/* Preventive Measures */}
-        <TouchableOpacity
-          onPress={() =>
-            setExpanded({ ...expanded, preventive: !expanded.preventive })
-          }
-        >
-          <View className="bg-green-100 rounded-xl p-4 mb-4">
-            <Text className="text-lg font-bold text-green-800">
-              Preventive Measures {expanded.preventive ? "▲" : "▼"}
-            </Text>
-            {expanded.preventive && (
-              <View className="mt-3">
-                {aiAnalysis.recommendations.preventiveMeasures.map((m, idx) => (
-                  <Text key={idx}>- {m}</Text>
-                ))}
-                <Text className="mt-2 font-bold text-amber-700">
-                  Follow-up: {aiAnalysis.recommendations.followUpDays} days
-                </Text>
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
+                  {/* Severity */}
+                  <View className="flex-row items-center mt-2">
+                    <Text className="font-semibold text-gray-700">Severity:</Text>
+                    <Text className="ml-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 font-bold">
+                      {severity}
+                    </Text>
+                  </View>
 
-        {/* Disease Forecast */}
-        <TouchableOpacity
-          onPress={() =>
-            setExpanded({ ...expanded, forecast: !expanded.forecast })
-          }
-        >
-          <View className="bg-green-100 rounded-xl p-4 mb-4">
-            <Text className="text-lg font-bold text-green-800">
-              Disease Forecast {expanded.forecast ? "▲" : "▼"}
-            </Text>
-            {expanded.forecast && (
-              <View className="mt-3 items-center">
-                <Text className="text-3xl font-bold text-green-600">
-                  {aiAnalysis.diseaseRiskPercent}%
-                </Text>
-                <Text className="text-gray-600">
-                  Disease Risk (7-14 day forecast)
-                </Text>
-              </View>
-            )}
+                  {/* Damage */}
+                  <View className="flex-row items-center mt-2">
+                    <Text className="font-semibold text-gray-700">Damage:</Text>
+                    <Text className="ml-2 px-3 py-1 rounded-full bg-red-100 text-red-600 font-bold">
+                      {damagePercent}%
+                    </Text>
+                  </View>
+                </>
+              )}
+            </View>
           </View>
-        </TouchableOpacity>
 
-        {/* Weather Risk */}
-        <View className="bg-white rounded-xl p-4 border border-gray-300">
-          <Text className="text-lg font-bold text-slate-800">
-            Weather Analysis
-          </Text>
-          <Text className="mt-2 text-gray-600">{weatherRisk.description}</Text>
-          <Text className="mt-2 font-bold text-red-600">
-            Risk Level: {weatherRisk.riskLevel}
-          </Text>
+
+          {/* Treatment Plan */}
+          {hasDisease && (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() =>
+                setExpanded({ ...expanded, treatment: !expanded.treatment })
+              }
+            >
+              <View className="bg-white rounded-2xl p-5 mb-5 border border-green-300 shadow-md">
+
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-2xl font-bold text-green-900">
+                    Treatment Plan
+                  </Text>
+                  <Text className="text-xl text-green-700">
+                    {expanded.treatment ? "▲" : "▼"}
+                  </Text>
+                </View>
+
+                {expanded.treatment && (
+                  <View className="mt-4">
+
+                    {loadingPlan ? (
+                      <ActivityIndicator size="large" />
+                    ) : treatmentPlan.length > 0 ? (
+                      treatmentPlan.map((step, idx) => (
+                        <View
+                          key={idx}
+                          className="bg-green-50 border border-green-200 p-4 rounded-xl mb-3 shadow-sm"
+                        >
+                          <Text className="text-gray-800 text-base leading-5">
+                            {step}
+                          </Text>
+                        </View>
+                      ))
+                    ) : (
+                      <Text className="text-gray-600">No treatment steps available</Text>
+                    )}
+
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+          )}
+
+
+          {/* Forecast */}
+          {hasDisease && forecast.length > 0 && (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() =>
+                setExpanded({ ...expanded, forecast: !expanded.forecast })
+              }
+            >
+              <View className="bg-white rounded-2xl p-5 mb-10 border border-green-300 shadow-md">
+
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-2xl font-bold text-green-900">
+                    Disease Forecast
+                  </Text>
+                  <Text className="text-xl text-green-700">
+                    {expanded.forecast ? "▲" : "▼"}
+                  </Text>
+                </View>
+
+                {expanded.forecast && (
+                  <View className="mt-5">
+
+                    {forecast.map((f: any, idx: number) => (
+                      <View
+                        key={idx}
+                        className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4 shadow-sm"
+                      >
+                        <Text className="text-lg font-semibold text-emerald-900">
+                          {f.date}
+                        </Text>
+
+                        <Text
+                          className={`mt-2 text-base font-bold ${
+                            f.risk === "High"
+                              ? "text-red-600"
+                              : f.risk === "Moderate"
+                              ? "text-yellow-600"
+                              : "text-green-700"
+                          }`}
+                        >
+                          Risk: {f.risk}
+                        </Text>
+                      </View>
+                    ))}
+
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+          )}
+
         </View>
-      </View>
-       <Modal visible={!!previewImage} transparent animationType="fade">
-        <View className="flex-1 bg-black justify-center items-center">
-          <Image
-            source={{ uri: previewImage || "" }}
-            className="w-full h-[80%] resize-contain"
-          />
-          <TouchableOpacity
-            onPress={() => setPreviewImage(null)}
-            className="absolute top-12 right-5 bg-red-600 p-2 rounded-full"
-          >
-            <Text className="text-white text-lg">✕</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

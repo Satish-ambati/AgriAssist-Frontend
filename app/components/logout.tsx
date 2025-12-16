@@ -17,7 +17,7 @@ const Logout: React.FC = () => {
     try {
       // Call logout API
       await axios.post(Api + "/api/auth/logout", {refreshToken}, { withCredentials: true });
-
+      
       // Clear refresh token from secure store
       await SecureStore.deleteItemAsync("refreshToken");
 

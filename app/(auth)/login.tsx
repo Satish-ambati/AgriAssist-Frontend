@@ -209,6 +209,7 @@ const Login: React.FC = () => {
 
         console.log("User:", user);
         console.log("Access Token:", accessToken);
+        console.log("refresh Token : " , refreshToken);
         console.log("Refresh Token stored securely");
       } else {
         Alert.alert("Login Failed", response.data.message || "Invalid OTP or login failed");

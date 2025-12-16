@@ -66,11 +66,14 @@ const Dashboard = () => {
       </View>
 
       {/* Quick Access */}
-      <View className="pb-6">
+      <View className="pb-4">
         <QuickAccess />
       </View>
 
+      <View className="flex flex-row items-center justify-center "><Text className="text-xs ">Are you having any debts ? <Text className="text-green-600">click here .</Text></Text></View>
+
       <View className="h-6" />
+
     </ScrollView>
   );
 };

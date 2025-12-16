@@ -2,34 +2,48 @@ import React from "react";
 import { View, Text } from "react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
 
-// Import your screens
 import CropGrowth from "./CropGrowth";
 import Schedule from "./Schedule";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
 
 const Tab = createMaterialTopTabNavigator();
 
 const Layout = () => {
+  const params = useLocalSearchParams();
+
+  const cropCycleId = params.cropCycleId as string;
+
+  let cropData: any = null;
+  try {
+    const raw =
+      Array.isArray(params.cropData) ? params.cropData[0] : params.cropData;
+    cropData = raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    console.log("CropData parse error:", e);
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
-      {/* Common Header */}
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: "#047857" }}>
+      {/* HEADER */}
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: "#16a34a" }}>
         <View
           style={{
-            display:"flex" ,
-            flexDirection : "row" ,
-            justifyContent : "space-between" ,
-            alignItems : "center" ,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
             paddingVertical: 16,
             paddingHorizontal: 16,
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: 2 },
           }}
         >
-          <MaterialCommunityIcons name="arrow-left" color={"white"} size={22} onPress={() => router.push("/dashboard")} />
+          <MaterialCommunityIcons
+            name="arrow-left"
+            color="white"
+            size={22}
+            onPress={() => router.push("/dashboard")}
+          />
+
           <Text
             style={{
               color: "white",
@@ -40,26 +54,43 @@ const Layout = () => {
           >
             Farm Assistant
           </Text>
-          <View className="w-10"></View>
+
+          <View style={{ width: 40 }} />
         </View>
       </SafeAreaView>
 
-      {/* Material Top Tabs */}
+      {/* TABS */}
       <Tab.Navigator
         screenOptions={{
           swipeEnabled: false,
-          tabBarStyle: { backgroundColor: "#4987af", height: 60 },
+          tabBarStyle: {
+            backgroundColor: "#22c55e", // green-500
+            height: 60,
+          },
           tabBarActiveTintColor: "white",
-          tabBarInactiveTintColor: "lightgray",
+          tabBarInactiveTintColor: "#d1fae5", // green-100
           tabBarLabelStyle: { fontWeight: "bold", fontSize: 16 },
           tabBarIndicatorStyle: {
-            backgroundColor: "white", // underline indicator
+            backgroundColor: "#f0fdf4", // green-50 indicator
             height: 3,
           },
         }}
       >
-        <Tab.Screen name="CropGrowth" component={CropGrowth} options={{ title: "Health" }} />
-        <Tab.Screen name="Schedule" component={Schedule} options={{ title: "Schedule" }} />
+        <Tab.Screen
+          name="CropGrowth"
+          children={() => (
+            <CropGrowth cropCycleId={cropCycleId} cropData={cropData} />
+          )}
+          options={{ title: "Health" }}
+        />
+
+        <Tab.Screen
+          name="Schedule"
+          children={() => (
+            <Schedule cropCycleId={cropCycleId} cropData={cropData} />
+          )}
+          options={{ title: "Schedule" }}
+        />
       </Tab.Navigator>
     </View>
   );

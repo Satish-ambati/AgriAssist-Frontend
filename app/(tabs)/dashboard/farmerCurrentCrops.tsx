@@ -1,4 +1,4 @@
-import { MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
 import { ScrollView, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
@@ -77,9 +77,9 @@ const FarmerCurrentCrops: React.FC = () => {
 
   const handleGetAssist = (crop: any) => {
     router.push({
-      pathname: "/assistantScreen",
+      pathname: "/assistant/CropMonitoring/CropGrowth",
       params: {
-        cropId: crop._id,
+        cropCycleId: crop._id,
         cropData: JSON.stringify(crop),
       },
     });
@@ -107,7 +107,7 @@ const FarmerCurrentCrops: React.FC = () => {
         <Text className="text-2xl font-bold text-green-500">
           🌾 Your Current Crops ({activeCrops.length})
         </Text>
-        {activeCrops.length > 0 && (
+        {activeCrops.length > 2 && (
           <TouchableOpacity
             onPress={handleSeeAll}
             className="flex flex-row items-center justify-center"
@@ -121,15 +121,22 @@ const FarmerCurrentCrops: React.FC = () => {
       </View>
 
       {activeCrops.length === 0 ? (
-        <View className="bg-white p-5 rounded-xl shadow items-center">
-          <Text className="text-gray-500">
-            No active crops found. Add your first crop to get started.
+        <View className="bg-white p-6 rounded-2xl  items-center gap-2">
+          <Ionicons name="leaf-outline" size={42} color="#16a34a" />
+          
+          <Text className="text-gray-700 font-bold text-xl">
+            No Active Crops
+          </Text>
+
+          <Text className="text-gray-500 text-center text-sm px-4">
+            Add your first crop to start tracking your crop cycle and farm activities.
           </Text>
         </View>
+
       ) : (
         <ScrollView horizontal={false}>
           {activeCrops.slice(0, 2).map((crop) => (
-            <View key={crop._id} className="bg-white p-5 rounded-xl mb-4 shadow">
+            <View key={crop._id} className="bg-white p-5 rounded-xl mb-4 ">
               {/* Crop Header */}
               <View className="flex-row justify-between items-start mb-4">
                 <View className="flex-1">

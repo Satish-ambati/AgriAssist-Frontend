@@ -1,6 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  ReactNode,
+} from "react";
 import * as Notifications from "expo-notifications";
 import { registerForPushNotificationsAsync } from "../services/notifications/registerForPushNotifications";
+import { useFarmerStore } from "@/store";
 
 interface NotificationContextType {
   expoPushToken: string | null;
@@ -12,7 +20,8 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const useNotification = () => {
   const context = useContext(NotificationContext);
-  if (!context) throw new Error("useNotification must be used within NotificationProvider");
+  if (!context)
+    throw new Error("useNotification must be used within NotificationProvider");
   return context;
 };
 
@@ -20,38 +29,59 @@ interface NotificationProviderProps {
   children: ReactNode;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
+export function NotificationProvider({ children }: NotificationProviderProps) {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [notification, setNotification] = useState<Notifications.Notification | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
-  // Use any or ReturnType to satisfy TypeScript
-  const notificationListener = useRef<ReturnType<typeof Notifications.addNotificationReceivedListener> | null>(null);
-  const responseListener = useRef<ReturnType<typeof Notifications.addNotificationResponseReceivedListener> | null>(null);
+  const { farmerInfo } = useFarmerStore();
 
+  const notificationListener = useRef<ReturnType<
+    typeof Notifications.addNotificationReceivedListener
+  > | null>(null);
+
+  const responseListener = useRef<ReturnType<
+    typeof Notifications.addNotificationResponseReceivedListener
+  > | null>(null);
+
+  // 🔥 Wait for farmerInfo to load
   useEffect(() => {
-    registerForPushNotificationsAsync()
-      .then(token => setExpoPushToken(token))
-      .catch(err => setError(err));
+    if (!farmerInfo?.farmer) {
+      console.log("⏳ farmerInfo not ready yet...");
+      return;
+    }
 
-    notificationListener.current = Notifications.addNotificationReceivedListener((notif) => {
-      console.log("🔔 Notification Received: ", notif);
-      setNotification(notif);
-    });
+    console.log("✅ farmerInfo loaded. Registering push notifications...");
 
-    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
-      console.log("🔔 Notification Response: ", JSON.stringify(response, null, 2));
-    });
+    registerForPushNotificationsAsync(
+      farmerInfo.farmer._id,
+      farmerInfo.farmer.expoPushToken
+    )
+      .then((token) => setExpoPushToken(token))
+      .catch((err) => setError(err));
+
+    // Listeners
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notif) => {
+        setNotification(notif);
+      });
+
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log("📩 Notification Response:", response);
+      });
 
     return () => {
       notificationListener.current?.remove();
       responseListener.current?.remove();
     };
-  }, []);
+  }, [farmerInfo?.farmer]); // Re-run only when farmer loads
+
+  const value = { expoPushToken, notification, error };
 
   return (
-    <NotificationContext.Provider value={{ expoPushToken, notification, error }}>
+    <NotificationContext.Provider value={value}>
       {children}
     </NotificationContext.Provider>
   );
-};
+}

@@ -32,6 +32,8 @@ export interface Farmer {
       weight?: "kg" | "quintal";
     };
   };
+      expoPushToken?: string ;
+
 
   createdAt?: string;
   updatedAt?: string;

@@ -13,6 +13,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import { Api } from "@/app/api";
 import { Crop, useCropStore } from "@/store/cropStore";
+import * as SecureStore from "expo-secure-store";
 
 const categories = [
   { value: "all", label: "All" },
@@ -35,22 +36,27 @@ const CropSelectionScreen: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
     const hasFetched = useRef(false); // ✅ to prevent repeated fetching
-
+const [confirmLoading, setConfirmLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
 
   const { addCrop } = useCropStore();
+
 
   // ✅ Fetch crops directly from backend (already matches Crop schema)
   useEffect(() => {
     const fetchCrops = async () => {
       if (!farmData || hasFetched.current) return; // ✅ only once
       hasFetched.current = true;
+      const token = await SecureStore.getItemAsync("refreshToken");
+
       try {
         setLoading(true);
         const { data } = await axios.post(
           `${Api}/api/ai/crop-recommendation`,
           farmData,
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { "Content-Type": "application/json" ,
+                      "Authorization": `Bearer ${token}`
+          } }
         );
 
         if (data.success && Array.isArray(data.recommendedCrops)) {
@@ -80,54 +86,60 @@ const CropSelectionScreen: React.FC = () => {
     setModalVisible(true);
   };
 
-  // ✅ Create Crop Cycle using selected crop
-  const handleConfirm = async () => {
-    if (!selectedCrop || !farmData) return;
-    try {
-      setLoading(true);
+ const handleConfirm = async () => {
+  if (!selectedCrop || !farmData) return;
 
-      const { data } = await axios.post(
-        `${Api}/api/crop-cycle/start/${farmData.farmer}/${farmData._id}`,
-        {
-          crop: {
-            name: selectedCrop.crop.name,
-            variety: selectedCrop.crop.variety,
-            category: selectedCrop.crop.category,
-          },
-          season: selectedCrop.season,
-          timeline: {
-            duration: selectedCrop?.timeline?.duration,
-            expectedHarvestDate: new Date(
-              Date.now() + (selectedCrop?.timeline?.duration ?? 90 )* 24 * 60 * 60 * 1000
-            ),
-          },
-          yield: {
-            expected: selectedCrop.yield?.expected,
-            unit: "q/acre",
-          },
-          aiRecommendations: selectedCrop.aiRecommendations || {},
-          cropStage: "Planning",
-          status: "Active",
-        }
-      );
+  try {
+    setConfirmLoading(true);
 
-      const newCropCycle = data as Crop;
+    const { data } = await axios.post(
+      `${Api}/api/crop-cycle/start/${farmData.farmer}/${farmData._id}`,
+      {
+        crop: {
+          name: selectedCrop.crop.name,
+          variety: selectedCrop.crop.variety,
+          category: selectedCrop.crop.category,
+        },
+        season: selectedCrop.season,
+        timeline: {
+          sowingDate: selectedCrop.timeline.sowingDate,
+          duration: selectedCrop.timeline.duration,
+          expectedHarvestDate: selectedCrop.timeline.expectedHarvestDate,
+        },
+        yield: {
+          expected: selectedCrop.yield?.expected,
+          unit: "q/acre",
+        },
+        aiRecommendations: selectedCrop.aiRecommendations || {},
+        cropStage: "Planning",
+        status: "Active",
+        tasks: [],
+      }
+    );
 
-      // ✅ Update Zustand immediately
-      addCrop(newCropCycle);
-
-      setModalVisible(false);
-      router.push({
-        pathname: "/assistant/CropMonitoring/CropGrowth",
-        params: { cropCycleId: newCropCycle._id },
-      });
-    } catch (err) {
-      console.error("❌ Failed to create crop cycle:", err);
-      setError("Failed to start crop cycle. Please try again.");
-    } finally {
-      setLoading(false);
+    if (!data.success) {
+      throw new Error("Failed to create cycle");
     }
-  };
+
+    const newCropCycle = data.cropCycle;
+    addCrop(newCropCycle);
+
+    setModalVisible(false);
+
+    router.push({
+      pathname: "/assistant/CropMonitoring/CropGrowth",
+      params: {
+        cropCycleId: newCropCycle._id,
+        cropData: JSON.stringify(newCropCycle),
+      },
+    });
+  } catch (err) {
+    console.error("❌ Failed to create crop cycle:", err);
+    setError("Failed to start crop cycle. Please try again.");
+  } finally {
+    setConfirmLoading(false);
+  }
+};
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -310,11 +322,16 @@ const CropSelectionScreen: React.FC = () => {
 
               <TouchableOpacity
                 onPress={handleConfirm}
-                className="bg-green-600 px-6 py-3 rounded-lg flex-1 shadow-lg"
+                className="bg-green-600 px-6 py-3 rounded-lg flex-1 shadow-lg flex-row justify-center items-center"
+                disabled={confirmLoading}
               >
-                <Text className="text-base font-semibold text-white text-center">
-                  Confirm
-                </Text>
+                {confirmLoading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text className="text-base font-semibold text-white text-center">
+                    Confirm
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>

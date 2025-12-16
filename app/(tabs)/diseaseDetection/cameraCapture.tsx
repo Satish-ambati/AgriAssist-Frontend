@@ -9,16 +9,26 @@ import {
   ActionSheetIOS,
   Modal,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import axios from "axios";
+import { Api, IP } from "@/app/api";
+import { useFarmerStore } from "@/store";
 
 export default function CameraCapture() {
   const [images, setImages] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const {farmerInfo } = useFarmerStore() 
+  // const [city, setCity] = useState("vizag"); 
+  const [city, setCity] = useState(farmerInfo.farmer?.location?.mandal || "vizag");
+
+  
 
   useFocusEffect(
     useCallback(() => {
@@ -29,10 +39,11 @@ export default function CameraCapture() {
     }, [])
   );
 
-  // ---------------- Request Permissions ----------------
   const requestPermissions = async () => {
-    const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
-    const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status: cameraStatus } =
+      await ImagePicker.requestCameraPermissionsAsync();
+    const { status: mediaStatus } =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (cameraStatus !== "granted" || mediaStatus !== "granted") {
       Alert.alert(
@@ -44,7 +55,6 @@ export default function CameraCapture() {
     return true;
   };
 
-  // ---------------- Pick from Gallery ----------------
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -57,7 +67,6 @@ export default function CameraCapture() {
     }
   };
 
-  // ---------------- Take Photo ----------------
   const takePhoto = async () => {
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -70,12 +79,10 @@ export default function CameraCapture() {
     }
   };
 
-  // ---------------- Remove Image ----------------
   const removeImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  // ---------------- Open Picker ----------------
   const openPicker = async () => {
     const granted = await requestPermissions();
     if (!granted) return;
@@ -93,6 +100,51 @@ export default function CameraCapture() {
       );
     } else {
       setShowModal(true);
+    }
+  };
+
+  // ---------------- Analyze Button ----------------
+  const analyzeImages = async () => {
+    if (images.length === 0) {
+      Alert.alert("No Images", "Please add at least one plant image");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      images.forEach((uri, index) => {
+        formData.append("files", {
+          uri,
+          name: `leaf_${index}.jpg`,
+          type: "image/jpeg",
+        } as any);
+      });
+      formData.append("city", city);
+
+      const response = await axios.post(
+        `http://${IP}:8000/predict`, // replace with your LAN IP
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      setLoading(false);
+      console.log("✅ Backend response:", response.data); // log response
+
+
+      // Navigate to result page with API response
+      router.replace({
+        pathname: "/diseaseDetection/diseaseResult",
+        params: { results: JSON.stringify(response.data) },
+      });
+      setImages([]);
+    } catch (err) {
+      setLoading(false);
+      Alert.alert("Error", "Failed to analyze images. Please try again.");
+      console.error(err);
     }
   };
 
@@ -120,16 +172,12 @@ export default function CameraCapture() {
         >
           🌱 Plant Disease Scanner
         </Text>
-        <Text
-          style={{ color: "#dcfce7", textAlign: "center", fontSize: 16 }}
-        >
+        <Text style={{ color: "#dcfce7", textAlign: "center", fontSize: 16 }}>
           Capture clear leaf images for instant health analysis
         </Text>
       </View>
 
-      <ScrollView
-        style={{ flex: 1, paddingHorizontal: 20, paddingVertical: 24 }}
-      >
+      <ScrollView style={{ flex: 1, paddingHorizontal: 20, paddingVertical: 24 }}>
         {/* Leaf Collection */}
         <View style={{ marginBottom: 24 }}>
           <Text
@@ -168,11 +216,9 @@ export default function CameraCapture() {
               >
                 No Plants Scanned Yet
               </Text>
-              <Text
-                style={{ color: "#6b7280", textAlign: "center", lineHeight: 20 }}
-              >
-                Start by capturing images of plant leaves{"\n"}
-                Our AI will analyze them for diseases
+              <Text style={{ color: "#6b7280", textAlign: "center", lineHeight: 20 }}>
+                Start by capturing images of plant leaves{"\n"}Our AI will analyze them for
+                diseases
               </Text>
             </View>
           ) : (
@@ -248,24 +294,19 @@ export default function CameraCapture() {
 
         {/* Analyze Button */}
         <TouchableOpacity
-          onPress={() => {
-            if (images.length === 0) {
-              Alert.alert("No Images", "Please add at least one plant image");
-              return;
-            }
-            router.push({
-              pathname: "/diseaseDetection/diseaseResult",
-              params: { images: JSON.stringify(images) },
-            });
-            setImages([]);
-          }}
-          disabled={images.length === 0}
+          onPress={analyzeImages}
+          disabled={images.length === 0 || loading}
           style={{
             paddingVertical: 16,
             borderRadius: 12,
-            backgroundColor: images.length > 0 ? "#15803d" : "#9ca3af",
+            backgroundColor:
+              images.length > 0 && !loading ? "#15803d" : "#9ca3af",
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
+          {loading && <ActivityIndicator color="white" style={{ marginRight: 8 }} />}
           <Text
             style={{
               color: "white",
@@ -277,6 +318,36 @@ export default function CameraCapture() {
             Analyze {images.length > 0 ? `(${images.length})` : ""}
           </Text>
         </TouchableOpacity>
+
+                {/* Disclaimer / Safety Note */}
+        <View
+          style={{
+            marginTop: 16,
+            backgroundColor: "#fef3c7",
+            padding: 12,
+            borderRadius: 12,
+            borderLeftWidth: 4,
+            borderLeftColor: "#f59e0b",
+          }}
+        >
+          <Text
+            style={{
+              color: "#92400e",
+              fontWeight: "bold",
+              marginBottom: 4,
+              fontSize: 14,
+            }}
+          >
+            ⚠️ Important Notice
+          </Text>
+
+          <Text style={{ color: "#78350f", fontSize: 13, lineHeight: 18 }}>
+            The image must be in clarity .
+            This AI prediction is only for educational and guidance purposes.  
+            It may not always be 100% accurate.  
+            Please consult an agricultural expert for final diagnosis or treatment decisions.
+          </Text>
+        </View>
       </ScrollView>
 
       {/* Android Modal */}
@@ -307,9 +378,7 @@ export default function CameraCapture() {
                 borderBottomColor: "#e5e7eb",
               }}
             >
-              <Text style={{ fontSize: 18, textAlign: "center" }}>
-                📷 Take Photo
-              </Text>
+              <Text style={{ fontSize: 18, textAlign: "center" }}>📷 Take Photo</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
@@ -326,19 +395,8 @@ export default function CameraCapture() {
                 🖼️ Choose from Gallery
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setShowModal(false)}
-              style={{ paddingVertical: 12 }}
-            >
-              <Text
-                style={{
-                  color: "#ef4444",
-                  fontSize: 18,
-                  textAlign: "center",
-                }}
-              >
-                Cancel
-              </Text>
+            <TouchableOpacity onPress={() => setShowModal(false)} style={{ paddingVertical: 12 }}>
+              <Text style={{ color: "#ef4444", fontSize: 18, textAlign: "center" }}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -373,6 +431,8 @@ export default function CameraCapture() {
             <Ionicons name="close" size={28} color="white" />
           </TouchableOpacity>
         </View>
+
+
       </Modal>
     </View>
   );

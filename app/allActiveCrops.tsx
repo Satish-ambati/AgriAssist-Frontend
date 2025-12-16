@@ -2,8 +2,8 @@ import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Crop } from "./(tabs)/dashboard/farmerCurrentCrops";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Crop } from "@/store/cropStore";
 
 const AllActiveCrops: React.FC = () => {
   const { crops } = useLocalSearchParams<{ crops: string }>();
@@ -44,9 +44,9 @@ const AllActiveCrops: React.FC = () => {
 
   const handleGetAssist = (crop: Crop) => {
     router.push({
-      pathname: "/assistantScreen",
+      pathname: "/assistant/CropMonitoring/CropGrowth",
       params: {
-        cropId: crop._id,
+        cropCycleId: crop._id,
         cropData: JSON.stringify(crop),
       },
     });

@@ -1,12 +1,37 @@
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import { Tabs, useRouter } from "expo-router";
+import { Text, Pressable } from "react-native";
 
 export default function TabsLayout() {
+  const router = useRouter();
+
   return (
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
+
+        // ⭐ FIX: override assistant tab press
+        tabBarButton: ({ onPress, accessibilityState, children, style }) => {
+          const isAssistant = route.name === "assistant";
+
+          return (
+            <Pressable
+              onPress={(e) => {
+                if (isAssistant) {
+                  e.preventDefault();
+                  router.replace("/assistant"); // reset assistant tab
+                } else {
+                  onPress?.(e);
+                }
+              }}
+              accessibilityState={accessibilityState}
+              style={style}
+            >
+              {children}
+            </Pressable>
+          );
+        },
+
         tabBarStyle: {
           backgroundColor: "#F9FAFB",
           borderTopColor: "#E5E7EB",
@@ -14,10 +39,9 @@ export default function TabsLayout() {
           height: 70,
           paddingBottom: 5,
         },
+
         tabBarIcon: ({ size, focused }) => {
           let iconName: string = "ellipse-outline";
-
-          // Default to Ionicons
           let IconComponent: any = Ionicons;
 
           switch (route.name) {
@@ -25,10 +49,10 @@ export default function TabsLayout() {
               iconName = focused ? "grid" : "grid-outline";
               break;
             case "diseaseDetection":
-              iconName = focused ? "medkit" : "medkit-outline"; // 🌱 Plant health
+              iconName = focused ? "medkit" : "medkit-outline";
               break;
             case "assistant":
-              IconComponent = FontAwesome5; // use FA5 for robot
+              IconComponent = FontAwesome5;
               iconName = "robot";
               break;
             case "marketPrices":
@@ -44,29 +68,19 @@ export default function TabsLayout() {
               name={iconName}
               size={size}
               color={focused ? "#059669" : "#6B7280"}
-              solid={IconComponent === FontAwesome5} // robot needs solid style
+              solid={IconComponent === FontAwesome5}
             />
           );
         },
+
         tabBarLabel: ({ focused }) => {
-          let label;
-          switch (route.name) {
-            case "dashboard":
-              label = "Dashboard";
-              break;
-            case "diseaseDetection":
-              label = "Disease";
-              break;
-            case "assistant":
-              label = "Assistant";
-              break;
-            case "marketPrices":
-              label = "Prices";
-              break;
-            case "history":
-              label = "History";
-              break;
-          }
+          const labels: any = {
+            dashboard: "Dashboard",
+            diseaseDetection: "Disease",
+            assistant: "Assistant",
+            marketPrices: "Prices",
+            history: "History",
+          };
 
           return (
             <Text
@@ -76,7 +90,7 @@ export default function TabsLayout() {
                 color: focused ? "#059669" : "#6B7280",
               }}
             >
-              {label}
+              {labels[route.name]}
             </Text>
           );
         },

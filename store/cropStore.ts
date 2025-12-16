@@ -27,10 +27,10 @@ export interface AiRecommendations {
 }
 
 export interface Timeline {
-  sowingDate?: string | Date;
-  expectedHarvestDate?: string | Date;
+  sowingDate: string | Date;
+  expectedHarvestDate: string | Date;
   actualHarvestDate?: string | Date;
-  duration?: number;
+  duration: number;
 }
 
 export interface Expenses {
@@ -61,7 +61,7 @@ export interface Crop {
   };
   season: 'Kharif' | 'Rabi' | 'Zaid';
   cropStage: 'Planning' | 'Sowing' | 'Germination' | 'Vegetative' | 'Flowering' | 'Fruiting' | 'Maturity' | 'Harvested';
-  timeline?: Timeline;
+  timeline: Timeline;
   aiRecommendations?: AiRecommendations;
   expenses?: Expenses;
   yield?: Yield;
