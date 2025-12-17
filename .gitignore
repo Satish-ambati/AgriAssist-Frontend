@@ -44,3 +44,7 @@ google-services.json
 /android
 
 
+
+# Firebase admin credentials
+*.json
+firebase-credentials.json

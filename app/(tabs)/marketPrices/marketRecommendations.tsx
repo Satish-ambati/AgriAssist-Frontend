@@ -39,12 +39,15 @@ const MandiPrices = () => {
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const API_KEY="579b464db66ec23bdd000001e8b0d32cc3a2458566065d487dc51d8a"
+  const RESOURCE_ID="9ef84268-d588-465a-a308-a864a43d0070"
+
 
   const formatValue = (value: any) => (value ? value : '—');
 
   // Build API URL with multiple filters
   const buildUrl = () => {
-    let url = `https://api.data.gov.in/resource/${process.env.RESOURCE_ID}?api-key=${process.env.API_KEY}&format=json&limit=200`;
+    let url = `https://api.data.gov.in/resource/${RESOURCE_ID}?api-key=${API_KEY}&format=json&limit=200`;
 
     if (state.trim()) {
       url += `&filters[state]=${encodeURIComponent(state.trim())}`;
