@@ -12,10 +12,10 @@ import * as SecureStore from "expo-secure-store";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const FarmerHistory = () => {
-  const { farmerInfo } = useFarmerStore();
+  const { farmerInfo , setFarmerInfo } = useFarmerStore();
   const [history, setHistory] = useState([]);
 
-  const [language, setLanguage] = useState("english");
+  const [language, setLanguage] = useState<String>(farmerInfo.farmer?.language || "english");
 const [savingLang, setSavingLang] = useState(false);
 
 const languages = [
@@ -109,13 +109,12 @@ const languages = [
   try {
     setSavingLang(true);
     const token = await SecureStore.getItemAsync("refreshToken");
-    console.log(token);
     if (!token) {
       console.log("No auth token");
       return;
     }
 
-    await axios.post(
+    const response = await axios.post(
       Api + "/api/user/save-language",
       { language: lang },
       {
@@ -123,6 +122,10 @@ const languages = [
           Authorization: `Bearer ${token}`,
         },
       }
+    );
+    setFarmerInfo(
+      response.data.user,        // farmer
+      farmerInfo.accessToken     // accessToken
     );
 
     setLanguage(lang);
@@ -135,14 +138,13 @@ const languages = [
 
   return (
     <View className="flex-1 bg-gray-50">
-      <SafeAreaView className="flex-1">
         
         {/* Header */}
-        <View className="bg-green-500 px-4 py-5 rounded-b-3xl">
+        <View className="bg-green-500 px-4 py-5  rounded-b-3xl">
           <View className="flex-row items-center">
             
 
-            <Text className="flex-1 text-center text-white text-xl font-bold">
+            <Text className="flex-1 mt-4 text-center text-white text-2xl font-bold">
               Crop History
             </Text>
 
@@ -323,7 +325,6 @@ const languages = [
             </View>
           ))}
         </ScrollView>
-      </SafeAreaView>
     </View>
   );
 };

@@ -40,15 +40,13 @@ TaskManager.defineTask(
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
       <NotificationProvider>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
           <Stack.Screen name="ExpenseDiary" options={{ headerShown: false }} />
+          <Stack.Screen name="DebtsScreen" options={{ headerShown: false }} />
         </Stack>
       </NotificationProvider>
-    </GestureHandlerRootView>
   );
 }

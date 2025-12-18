@@ -267,6 +267,13 @@ const ChatScreen = () => {
                   <Ionicons name="send" size={18} color="white" />
                 </TouchableOpacity>
               )}
+
+              {/* <TouchableOpacity
+                  onPress={sendMessage}
+                  className="ml-2 bg-[#16a34a] rounded-full w-9 h-9 items-center justify-center"
+                >
+                  <Ionicons name="send" size={18} color="white" />
+                </TouchableOpacity> */}
             </View>
           </View>
         </SafeAreaView>

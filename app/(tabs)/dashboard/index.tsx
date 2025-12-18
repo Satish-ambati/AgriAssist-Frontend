@@ -10,11 +10,16 @@ import FarmerCurrentCrops from "./farmerCurrentCrops";
 import QuickAccess from "./quickAccess";
 import { useCropStore } from "@/store/cropStore";
 import { useFarmerStore } from "@/store";
+import DebtPrompt from "@/app/components/debtPrompt";
+import { useNavigation } from "expo-router";
 
 const Dashboard = () => {
   const { fetchCrops } = useCropStore(); 
   const {farmerInfo} = useFarmerStore() ;
   const [refreshing, setRefreshing] = useState(false);
+
+    const navigation = useNavigation<any>(); 
+
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -70,8 +75,7 @@ const Dashboard = () => {
         <QuickAccess />
       </View>
 
-      <View className="flex flex-row items-center justify-center "><Text className="text-xs ">Are you having any debts ? <Text className="text-green-600">click here .</Text></Text></View>
-
+      <DebtPrompt />
       <View className="h-6" />
 
     </ScrollView>

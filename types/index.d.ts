@@ -45,7 +45,7 @@ interface FarmerState {
     farmer: Farmer | null;
     accessToken: string | null;
   };
-  setFarmerInfo: (farmer: Farmer, accessToken: string) => void;
+  setFarmerInfo: (farmer: Farmer, accessToken: string | null) => void;
   clearFarmerInfo: () => void;
 }
 

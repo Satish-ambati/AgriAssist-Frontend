@@ -19,7 +19,7 @@ export default function TabsLayout() {
               onPress={(e) => {
                 if (isAssistant) {
                   e.preventDefault();
-                  router.replace("/assistant"); // reset assistant tab
+                  router.replace("/(tabs)/assistant");
                 } else {
                   onPress?.(e);
                 }

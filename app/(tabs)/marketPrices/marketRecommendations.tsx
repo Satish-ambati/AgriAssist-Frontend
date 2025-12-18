@@ -47,7 +47,7 @@ const MandiPrices = () => {
 
   // Build API URL with multiple filters
   const buildUrl = () => {
-    let url = `https://api.data.gov.in/resource/${RESOURCE_ID}?api-key=${API_KEY}&format=json&limit=200`;
+    let url = `https://api.data.gov.in/resource/${RESOURCE_ID}?api-key=${API_KEY}&format=json&limit=1000`;
 
     if (state.trim()) {
       url += `&filters[state]=${encodeURIComponent(state.trim())}`;

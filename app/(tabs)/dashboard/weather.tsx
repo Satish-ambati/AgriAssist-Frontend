@@ -49,6 +49,8 @@ const Weather: React.FC = () => {
       if (!weatherResponse.ok) throw new Error("Failed to fetch weather data");
       const weatherJson = await weatherResponse.json();
 
+      console.log(weatherJson);
+
       const forecastResponse = await fetch(
         `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
       );

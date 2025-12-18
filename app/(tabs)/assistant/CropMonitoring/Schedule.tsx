@@ -7,6 +7,7 @@ import { Api } from "@/app/api";
 // Types
 interface Props {
   cropCycleId: string;
+  cropData : any
 }
 
 interface Activity {
@@ -43,7 +44,7 @@ const getTypeColor = (type: string): string => {
 };
 
 // Main Component
-const WeeklySchedule: React.FC<Props> = ({ cropCycleId }) => {
+const WeeklySchedule: React.FC<Props> = ({ cropCycleId , cropData }) => {
   const [schedule, setSchedule] = useState<ScheduleDay[]>([]);
   const [loading, setLoading] = useState(true);
 
